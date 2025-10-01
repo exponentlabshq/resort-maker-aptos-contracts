@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+
+# IDE files
+.idea/
+.vscode/
+
+# Dependencies
+.aptos/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Temporary files
+*.swp
+*~
+
+*build/

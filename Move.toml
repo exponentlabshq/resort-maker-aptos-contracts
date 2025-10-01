@@ -1,0 +1,19 @@
+[package]
+name = "resort_maker_dapp"
+version = "1.0.0"
+authors = []
+
+[addresses]
+launchpad_addr = '_'
+initial_creator_addr = "_"
+
+[dev-addresses]
+launchpad_addr = '0x19525d9c69208c98fe37bb48871c0f23ef75d1794335c0d4a28a7603e18ab470'
+initial_creator_addr = "0x19525d9c69208c98fe37bb48871c0f23ef75d1794335c0d4a28a7603e18ab470"
+
+
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }
+
+[dev-dependencies]
