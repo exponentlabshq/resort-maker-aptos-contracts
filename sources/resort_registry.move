@@ -17,6 +17,8 @@ module launchpad_addr::resort_registry {
     const EINVALID_INVESTMENT_AMOUNT: u64 = 3;
     /// Resort not active
     const ERESORT_NOT_ACTIVE: u64 = 4;
+    /// Insufficient investment balance
+    const EINSUFFICIENT_INVESTMENT_BALANCE: u64 = 5;
 
     #[event]
     struct ResortCreatedEvent has store, drop {
@@ -31,6 +33,15 @@ module launchpad_addr::resort_registry {
 
     #[event]
     struct ResortInvestmentEvent has store, drop {
+        resort_id: u64,
+        investor: address,
+        amount: u64,
+        total_raised: u64,
+        timestamp: u64,
+    }
+
+    #[event]
+    struct ResortWithdrawalEvent has store, drop {
         resort_id: u64,
         investor: address,
         amount: u64,
@@ -127,20 +138,56 @@ module launchpad_addr::resort_registry {
         
         let resort = table::borrow_mut(&mut registry.resorts, resort_id);
         assert!(resort.is_active, ERESORT_NOT_ACTIVE);
-        assert!(amount >= resort.minimum_investment, EINVALID_INVESTMENT_AMOUNT);
+        
+        // Only check minimum investment for first-time investors
+        let is_new_investor = !table::contains(&resort.investors, investor);
+        if (is_new_investor) {
+            assert!(amount >= resort.minimum_investment, EINVALID_INVESTMENT_AMOUNT);
+        };
 
         // Update resort investment tracking
         resort.current_investment = resort.current_investment + amount;
         
         // Update investor tracking
-        if (table::contains(&resort.investors, investor)) {
+        if (is_new_investor) {
+            table::add(&mut resort.investors, investor, amount);
+        } else {
             let current_investment = table::borrow_mut(&mut resort.investors, investor);
             *current_investment = *current_investment + amount;
-        } else {
-            table::add(&mut resort.investors, investor, amount);
         };
 
         event::emit(ResortInvestmentEvent {
+            resort_id,
+            investor,
+            amount,
+            total_raised: resort.current_investment,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
+    /// Remove investment from a resort (called by staking module on unstake)
+    public fun remove_investment(
+        resort_id: u64,
+        investor: address,
+        amount: u64,
+    ) acquires ResortRegistry {
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        
+        // Verify investor has sufficient balance in this resort
+        assert!(table::contains(&resort.investors, investor), EINSUFFICIENT_INVESTMENT_BALANCE);
+        let investor_amount = table::borrow_mut(&mut resort.investors, investor);
+        assert!(*investor_amount >= amount, EINSUFFICIENT_INVESTMENT_BALANCE);
+
+        // Update investor tracking
+        *investor_amount = *investor_amount - amount;
+        
+        // Update resort investment tracking
+        resort.current_investment = resort.current_investment - amount;
+
+        event::emit(ResortWithdrawalEvent {
             resort_id,
             investor,
             amount,

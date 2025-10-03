@@ -20,7 +20,7 @@
 
 # Deploy on Testnet
 
-`aptos move publish --named-addresses launchpad_addr=default,initial_creator_addr=default --profile testnet`
+`aptos move publish --named-addresses launchpad_addr=default,initial_creator_addr=default --profile default`
 
 `aptos move publish --named-addresses launchpad_addr=resort-maker-2,initial_creator_addr=resort-maker-2 --profile resort-maker-2`
 
