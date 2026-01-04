@@ -19,6 +19,8 @@ module launchpad_addr::resort_registry {
     const ERESORT_NOT_ACTIVE: u64 = 4;
     /// Insufficient investment balance
     const EINSUFFICIENT_INVESTMENT_BALANCE: u64 = 5;
+    /// Only admin can update resort
+    const EONLY_ADMIN_CAN_UPDATE_RESORT: u64 = 6;
 
     #[event]
     struct ResortCreatedEvent has store, drop {
@@ -46,6 +48,13 @@ module launchpad_addr::resort_registry {
         investor: address,
         amount: u64,
         total_raised: u64,
+        timestamp: u64,
+    }
+
+    #[event]
+    struct ResortUpdatedEvent has store, drop {
+        resort_id: u64,
+        updated_by: address,
         timestamp: u64,
     }
 
@@ -124,6 +133,173 @@ module launchpad_addr::resort_registry {
             minimum_investment,
             creator: sender_addr,
             created_at: timestamp::now_seconds(),
+        });
+    }
+
+    /// Update resort details (admin only)
+    /// Allows updating all editable fields at once
+    public entry fun update_resort(
+        sender: &signer,
+        resort_id: u64,
+        name: String,
+        location: String,
+        description: String,
+        image_uri: String,
+        total_investment_needed: u64,
+        minimum_investment: u64,
+    ) acquires ResortRegistry {
+        let sender_addr = signer::address_of(sender);
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        
+        assert!(sender_addr == registry.admin, EONLY_ADMIN_CAN_UPDATE_RESORT);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        resort.name = name;
+        resort.location = location;
+        resort.description = description;
+        resort.image_uri = image_uri;
+        resort.total_investment_needed = total_investment_needed;
+        resort.minimum_investment = minimum_investment;
+
+        event::emit(ResortUpdatedEvent {
+            resort_id,
+            updated_by: sender_addr,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
+    /// Update resort name (admin only)
+    public entry fun update_resort_name(
+        sender: &signer,
+        resort_id: u64,
+        name: String,
+    ) acquires ResortRegistry {
+        let sender_addr = signer::address_of(sender);
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        
+        assert!(sender_addr == registry.admin, EONLY_ADMIN_CAN_UPDATE_RESORT);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        resort.name = name;
+
+        event::emit(ResortUpdatedEvent {
+            resort_id,
+            updated_by: sender_addr,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
+    /// Update resort location (admin only)
+    public entry fun update_resort_location(
+        sender: &signer,
+        resort_id: u64,
+        location: String,
+    ) acquires ResortRegistry {
+        let sender_addr = signer::address_of(sender);
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        
+        assert!(sender_addr == registry.admin, EONLY_ADMIN_CAN_UPDATE_RESORT);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        resort.location = location;
+
+        event::emit(ResortUpdatedEvent {
+            resort_id,
+            updated_by: sender_addr,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
+    /// Update resort description (admin only)
+    public entry fun update_resort_description(
+        sender: &signer,
+        resort_id: u64,
+        description: String,
+    ) acquires ResortRegistry {
+        let sender_addr = signer::address_of(sender);
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        
+        assert!(sender_addr == registry.admin, EONLY_ADMIN_CAN_UPDATE_RESORT);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        resort.description = description;
+
+        event::emit(ResortUpdatedEvent {
+            resort_id,
+            updated_by: sender_addr,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
+    /// Update resort image URI (admin only)
+    public entry fun update_resort_image(
+        sender: &signer,
+        resort_id: u64,
+        image_uri: String,
+    ) acquires ResortRegistry {
+        let sender_addr = signer::address_of(sender);
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        
+        assert!(sender_addr == registry.admin, EONLY_ADMIN_CAN_UPDATE_RESORT);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        resort.image_uri = image_uri;
+
+        event::emit(ResortUpdatedEvent {
+            resort_id,
+            updated_by: sender_addr,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
+    /// Update resort investment parameters (admin only)
+    public entry fun update_resort_investment_params(
+        sender: &signer,
+        resort_id: u64,
+        total_investment_needed: u64,
+        minimum_investment: u64,
+    ) acquires ResortRegistry {
+        let sender_addr = signer::address_of(sender);
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        
+        assert!(sender_addr == registry.admin, EONLY_ADMIN_CAN_UPDATE_RESORT);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        resort.total_investment_needed = total_investment_needed;
+        resort.minimum_investment = minimum_investment;
+
+        event::emit(ResortUpdatedEvent {
+            resort_id,
+            updated_by: sender_addr,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
+    /// Toggle resort active status (admin only)
+    public entry fun set_resort_active(
+        sender: &signer,
+        resort_id: u64,
+        is_active: bool,
+    ) acquires ResortRegistry {
+        let sender_addr = signer::address_of(sender);
+        let registry = borrow_global_mut<ResortRegistry>(@launchpad_addr);
+        
+        assert!(sender_addr == registry.admin, EONLY_ADMIN_CAN_UPDATE_RESORT);
+        assert!(table::contains(&registry.resorts, resort_id), ERESORT_NOT_FOUND);
+        
+        let resort = table::borrow_mut(&mut registry.resorts, resort_id);
+        resort.is_active = is_active;
+
+        event::emit(ResortUpdatedEvent {
+            resort_id,
+            updated_by: sender_addr,
+            timestamp: timestamp::now_seconds(),
         });
     }
 

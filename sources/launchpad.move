@@ -65,7 +65,7 @@ module launchpad_addr::launchpad {
     struct FAController has key {
         mint_ref: fungible_asset::MintRef,
         burn_ref: fungible_asset::BurnRef,
-        transfer_ref: fungible_asset::TransferRef
+        transfer_ref: fungible_asset::TransferRef,
     }
 
     /// Unique per FA
